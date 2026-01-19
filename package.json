@@ -1,0 +1,8 @@
+{
+  "name": "si-log-pro",
+  "version": "1.0.0",
+  "description": "Sensory Integration Log with AI",
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  }
+}

@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SI Log Pro (AI Edition)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Pen+Script&display=swap');
+        
+        body { 
+            font-family: 'Noto Sans KR', sans-serif; 
+            background-color: #cbd5e1;
+            font-size: 13px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+        
+        .paper-sheet {
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #94a3b8;
+            margin-bottom: 2rem;
+        }
+
+        .sketch-input {
+            border: 2px solid #475569;
+            border-radius: 0.25rem;
+            padding: 0.4rem;
+            background-color: #fff;
+            font-size: 0.9rem;
+            color: #334155;
+        }
+        .sketch-input:focus {
+            border-color: #2563eb;
+            outline: none;
+            box-shadow: 0 0 0 1px #2563eb;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: start;
+            gap: 0.3rem;
+            margin-bottom: 0.2rem;
+            cursor: pointer;
+        }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 1rem;
+            height: 1rem;
+            border: 1.5px solid #475569;
+            border-radius: 0.15rem;
+            margin-top: 0.15rem;
+            accent-color: #2563eb;
+            flex-shrink: 0;
+        }
+        .checkbox-wrapper span { color: #334155; line-height: 1.2; }
+        .checkbox-wrapper.checked span {
+            font-weight: 700;
+            color: #1e40af;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+        }
+
+        .highlighter-header {
+            font-weight: 800;
+            font-size: 1.1rem;
+            padding: 0.3rem 0.8rem;
+            margin-bottom: 0.8rem;
+            border-radius: 0.4rem;
+            border: 1px solid rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-A { background-color: #f1f5f9; color: #334155; }
+        .header-B { background-color: #dbeafe; color: #1e40af; }
+        .header-C { background-color: #e0e7ff; color: #3730a3; }
+        .header-D { background-color: #dcfce7; color: #166534; }
+        .header-E { background-color: #ffedd5; color: #9a3412; }
+
+        .sub-col-title {
+            font-size: 0.85rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid #94a3b8;
+            padding-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .col-c1 { color: #2563eb; border-color: #2563eb; }
+        .col-c2 { color: #16a34a; border-color: #16a34a; }
+        .col-c3 { color: #ea580c; border-color: #ea580c; }
+        .col-c4 { color: #9333ea; border-color: #9333ea; }
+        
+        .scroll-bottom-spacer {
+            height: 400px;
+            min-height: 400px;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        
+        @media (max-width: 1024px) {
+            .scroll-bottom-spacer {
+                height: 300px;
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="flex flex-col h-[100dvh] overflow-hidden">
+
+    <header class="bg-slate-800 text-white px-4 py-2 shadow-md shrink-0 flex justify-between items-center z-20">
+        <div class="flex items-center gap-2">
+            <span class="text-xl">📋</span>
+            <div>
+                <h1 class="text-lg font-bold leading-none">SI Log Pro</h1>
+                <span class="text-[10px] text-slate-300">AI Edition (Secure)</span>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="switchTab('write')" id="btn-tab-write" class="px-3 py-1 rounded bg-blue-600 text-xs font-bold hover:bg-blue-500 transition">작성</button>
+            <button onclick="switchTab('history')" id="btn-tab-history" class="px-3 py-1 rounded bg-slate-600 text-xs text-slate-200 font-bold hover:bg-slate-500 transition">기록 관리</button>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden relative">
+        
+        <div id="tab-write" class="flex-1 flex flex-col lg:flex-row h-full w-full">
+            
+            <div class="flex-1 overflow-y-auto custom-scrollbar bg-slate-200 p-4 lg:p-6 flex justify-center">
+                <div class="paper-sheet w-full max-w-[1200px] min-h-max p-6 lg:p-8 flex flex-col gap-5">
+                    
+                    <h2 class="text-3xl font-black text-slate-800 mb-2" style="font-family: 'Nanum Pen Script', cursive; font-size: 2.8rem;">
+                        Sensory Integration Log
+                    </h2>
+
+                    <section>
+                        <div class="highlighter-header header-A">
+                            <span>A. 아동 기본 정보</span>
+                            <button onclick="resetApp()" class="text-[11px] bg-white border px-2 py-0.5 rounded text-slate-500 hover:bg-red-50 hover:text-red-500 transition">초기화 ↺</button>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-2">
+                            <div class="md:col-span-3">
+                                <label class="block text-xs font-bold text-slate-600">이름</label>
+                                <input type="text" id="input-name" class="sketch-input w-full" placeholder="이름" oninput="handleNameInput()">
+                            </div>
+                            <div class="md:col-span-3">
+                                <label class="block text-xs font-bold text-slate-600">생년월일</label>
+                                <div class="flex gap-1">
+                                    <input type="date" id="input-dob" class="sketch-input w-full" oninput="updateBasicInfo()">
+                                    <button onclick="resetDob()" class="bg-slate-200 px-2 rounded text-slate-500 text-xs">↺</button>
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-600">생활연령</label>
+                                <div id="display-age" class="sketch-input w-full bg-slate-50 text-center font-bold text-indigo-700 flex items-center justify-center">-</div>
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="block text-xs font-bold text-slate-600">치료 날짜 / 회차</label>
+                                <div class="relative">
+                                    <input type="date" id="input-date" class="sketch-input w-full" oninput="updateBasicInfo()">
+                                    <span id="session-count-badge" class="absolute right-2 top-2 bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 rounded hidden"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-bold text-slate-600">컨디션</label>
+                                <select id="input-condition" class="sketch-input w-full" onchange="generateReport()">
+                                    <option value="">선택</option>
+                                    <option value="양호 (Good)">양호 (Good)</option>
+                                    <option value="피곤함/졸림">피곤함/졸림</option>
+                                    <option value="수면 부족">수면 부족</option>
+                                    <option value="흥분/과각성">흥분/과각성</option>
+                                    <option value="불안/긴장">불안/긴장</option>
+                                    <option value="기분 저조">기분 저조</option>
+                                    <option value="컨디션 저하(감기 등)">컨디션 저하</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-4">
+                                <label class="block text-xs font-bold text-slate-600">진단명</label>
+                                <select id="select-diagnosis" onchange="handleDiagnosisSelect()" class="sketch-input w-full bg-white text-xs">
+                                    <option value="">선택하세요</option>
+                                </select>
+                                <input type="text" id="input-diagnosis-manual" class="sketch-input w-full mt-1 hidden" placeholder="직접 입력" oninput="updateBasicInfo()">
+                            </div>
+                            <div class="md:col-span-6">
+                                <label class="block text-xs font-bold text-slate-600">메모 (특이사항)</label>
+                                <input type="text" id="input-memo" class="sketch-input w-full" placeholder="약복용, 보호자 요청사항 등" oninput="generateReport()">
+                            </div>
+                        </div>
+                        <div id="diagnosis-tip" class="hidden text-xs text-blue-600 bg-blue-50 p-2 mt-2 rounded border border-blue-100"></div>
+                    </section>
+
+                    <section>
+                        <div class="highlighter-header header-B">B. 주요 목표 (Main Goals)</div>
+                        <div id="container-B" class="grid grid-cols-2 md:grid-cols-5 gap-2"></div>
+                    </section>
+
+                    <section>
+                        <div class="highlighter-header header-C">C. 도구 및 활동 (Tools & Activities)</div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 border-b-2 border-dashed border-slate-300 pb-4 mb-4">
+                            <div class="md:col-span-2">
+                                <div class="sub-col-title col-c1">C-1. Sensory & Dynamic</div>
+                                <div id="container-C1" class="grid grid-cols-2 gap-x-2"></div>
+                            </div>
+                            <div class="md:col-span-1">
+                                <div class="sub-col-title col-c2">C-2. Posture & Core</div>
+                                <div id="container-C2"></div>
+                            </div>
+                            <div class="md:col-span-1">
+                                <div class="sub-col-title col-c3">C-3. Balance</div>
+                                <div id="container-C3"></div>
+                            </div>
+                            <div class="md:col-span-1">
+                                <div class="sub-col-title col-c4">C-4. Coordination</div>
+                                <div id="container-C4"></div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="sub-col-title text-slate-600 border-slate-400">C-5. 활동 구성 (Activities)</div>
+                            <div id="container-C5" class="grid grid-cols-1 md:grid-cols-4 gap-3"></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="highlighter-header header-D">D. 아동 반응 관찰 (Response)</div>
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <div><div class="sub-col-title text-green-700 border-green-300">D-1. 감각 반응</div><div id="container-D1"></div></div>
+                            <div><div class="sub-col-title text-green-700 border-green-300">D-2. 운동 수행</div><div id="container-D2"></div></div>
+                            <div><div class="sub-col-title text-green-700 border-green-300">D-3. 행동 조절</div><div id="container-D3"></div></div>
+                            <div><div class="sub-col-title text-green-700 border-green-300">D-4. 정서 반응</div><div id="container-D4"></div></div>
+                            <div><div class="sub-col-title text-green-700 border-green-300">D-5. 사회적 반응</div><div id="container-D5"></div></div>
+                        </div>
+                    </section>
+
+                    <section>
+                        <div class="highlighter-header header-E">E. 중재 전략 (Intervention)</div>
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div><div class="sub-col-title text-orange-700 border-orange-300">E-1. 환경 조절</div><div id="container-E1"></div></div>
+                            <div><div class="sub-col-title text-orange-700 border-orange-300">E-2. 촉진 기법</div><div id="container-E2"></div></div>
+                            <div><div class="sub-col-title text-orange-700 border-orange-300">E-3. 행동 관리</div><div id="container-E3"></div></div>
+                            <div><div class="sub-col-title text-orange-700 border-orange-300">E-4. 과제/일반</div><div id="container-E4"></div></div>
+                        </div>
+                    </section>
+                    
+                    <div class="scroll-bottom-spacer"></div>
+                </div>
+            </div>
+
+            <div class="w-full lg:w-[420px] bg-white border-l border-slate-300 flex flex-col shadow-xl z-10 shrink-0">
+                <div class="bg-slate-100 p-3 border-b border-slate-200 flex justify-between items-center">
+                    <span class="font-bold text-slate-700">📝 일지 미리보기</span>
+                    <div class="flex gap-1">
+                        <button onclick="saveLog()" class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 shadow-sm active:scale-95 transition-transform">저장</button>
+                        <button onclick="sendToGoogleDocs()" class="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 shadow-sm active:scale-95 transition-transform">Docs</button>
+                        <button onclick="copyReport()" class="bg-white border border-slate-300 text-slate-700 px-3 py-1 rounded text-xs hover:bg-slate-50 shadow-sm active:scale-95 transition-transform">복사</button>
+                    </div>
+                </div>
+                
+                <textarea id="report-output" class="flex-1 p-5 resize-none focus:outline-none font-mono text-sm leading-relaxed text-slate-800 bg-white" readonly></textarea>
+
+                <!-- ⭐ AI 요약 영역 (API 키 입력란 제거) -->
+                <div class="p-4 border-t border-slate-200 bg-slate-50">
+                    
+                    <div class="flex flex-col gap-3 mb-3">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-700 text-xs flex items-center gap-1">
+                                <span class="text-blue-500 text-base">✨</span> Gemini AI 임상 분석
+                            </span>
+                            <button onclick="generateGeminiSummary()" id="btn-ai" class="bg-indigo-600 text-white px-4 py-1.5 rounded-full text-xs font-bold hover:bg-indigo-700 shadow-md transition-all active:scale-95 flex items-center gap-1">
+                                🚀 분석 시작
+                            </button>
+                        </div>
+
+                        <!-- 모드 선택 -->
+                        <div class="flex bg-slate-200 p-1 rounded-lg">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="ai-mode" value="fast" class="peer hidden" checked>
+                                <div class="text-center text-[11px] py-1.5 rounded-md text-slate-500 font-bold transition-all peer-checked:bg-white peer-checked:text-indigo-600 peer-checked:shadow-sm">
+                                    ⚡ 빠른
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="ai-mode" value="thinking" class="peer hidden">
+                                <div class="text-center text-[11px] py-1.5 rounded-md text-slate-500 font-bold transition-all peer-checked:bg-white peer-checked:text-purple-600 peer-checked:shadow-sm">
+                                    🧠 사고
+                                </div>
+                            </label>
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="ai-mode" value="pro" class="peer hidden">
+                                <div class="text-center text-[11px] py-1.5 rounded-md text-slate-500 font-bold transition-all peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm">
+                                    💎 Pro
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- AI 출력 영역 -->
+                    <div class="relative group">
+                        <textarea id="ai-output" class="w-full h-40 p-3 text-xs border border-slate-300 rounded-lg bg-white resize-none focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 leading-relaxed transition-colors" placeholder="모드를 선택하고 [분석 시작]을 클릭하세요" readonly></textarea>
+                        
+                        <!-- 로딩 표시 -->
+                        <div id="ai-loading" class="hidden absolute inset-0 bg-white/90 backdrop-blur-[1px] flex flex-col items-center justify-center z-10 rounded-lg">
+                            <div class="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-3"></div>
+                            <span id="loading-text" class="text-xs text-indigo-700 font-bold animate-pulse">Gemini가 분석 중입니다...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-history" class="hidden w-full h-full bg-slate-100 p-6 overflow-y-auto">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-slate-800">🗂 저장된 기록 관리</h2>
+                    <button onclick="exportData()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700 flex items-center gap-2 text-sm font-bold transition">
+                        엑셀(CSV) 내보내기
+                    </button>
+                </div>
+                <div id="history-list" class="grid gap-4"></div>
+                <div id="empty-history" class="hidden text-center text-slate-400 py-10">저장된 기록이 없습니다.</div>
+                
+                <div class="scroll-bottom-spacer"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const DIAGNOSIS_LIST = [
+            { value: '자폐스펙트럼장애', label: '자폐스펙트럼장애 (ASD)', keywords: '구조화된 환경 제공, 감각 조절 지원' },
+            { value: 'ADHD', label: 'ADHD', keywords: '각성 조절을 위한 고강도 입력, 시각적 단서 제공' },
+            { value: '발달지연', label: '발달지연(GDD)', keywords: '발달 단계에 맞는 단계적 과제 제시' },
+            { value: '지적장애', label: '지적장애 (ID)', keywords: '단순하고 반복적인 지시, 성공 경험 제공' },
+            { value: '뇌성마비', label: '뇌성마비 (CP)', keywords: '자세 안정성 확보, 비정상적 반사 억제' },
+            { value: '다운증후군', label: '다운증후군', keywords: '관절 안정성 유의, 고유수용성 입력 강화' },
+            { value: '발달협응장애', label: '발달협응장애 (DCD)', keywords: '운동 계획 과정 중심 중재, 시각 보조' },
+            { value: '언어발달지연', label: '언어발달지연', keywords: '비언어적 소통 격려, 감각 놀이 활용' },
+            { value: '정서-행동문제', label: '정서-행동문제', keywords: '정서적 안정감 형성, 감각 휴식 제공' },
+        ];
+
+        const CATEGORIES = {
+            B: {
+                items: [
+                    { id: 'b_vestibular', label: '전정감각조절' }, { id: 'b_proprioception', label: '고유수용성' },
+                    { id: 'b_posture', label: '자세조절' }, { id: 'b_praxis', label: '운동계획' },
+                    { id: 'b_coordination', label: '협응능력' }, { id: 'b_attention', label: '주의집중' },
+                    { id: 'b_stability', label: '체간안정성' }, { id: 'b_balance', label: '균형반응' },
+                    { id: 'b_midline', label: '정중선교차' }, { id: 'b_visuomotor', label: '시각운동' },
+                    { id: 'b_modulation', label: '감각조절' }, { id: 'b_emotion', label: '정서조절' },
+                    { id: 'b_persistence', label: '과제지속성' }, { id: 'b_social', label: '사회적상호작용' },
+                ]
+            },
+            C: {
+                sections: [
+                    { id: 'C1', items: [
+                        { id: 'c1_platform', label: '플랫폼 그네', text: '플랫폼 그네' }, { id: 'c1_disc-swing', label: '원반 그네', text: '원반 그네' },
+                        { id: 'c1_t_swing', label: 'T형 그네', text: 'T형 그네' }, { id: 'c1_bolster', label: '볼스터 그네', text: '볼스터 그네' },
+                        { id: 'c1_ladder_swing', label: '사다리 그네', text: '사다리 그네' }, { id: 'c1_net', label: '네트 그네', text: '네트 그네' },
+                        { id: 'c1_hammock', label: '해먹', text: '해먹' }, { id: 'c1_frog', label: '프로그 그네', text: '프로그 그네' },
+                        { id: 'c1_Slide', label: '미끄럼틀', text: '미끄럼틀' }, { id: 'c1_Sliding-sit', label: '미끄럼틀(앉아)', text: '미끄럼틀 앉아서' },
+                        { id: 'c1_Sliding-prone', label: '미끄럼틀(엎드려)', text: '미끄럼틀 엎드려' }, { id: 'c1_Sliding-back', label: '미끄럼틀(뒤로)', text: '미끄럼틀 뒤로' },
+                        { id: 'c1_Roll', label: '앞구르기', text: '앞구르기' }, { id: 'c1_Log-roll', label: '매트 회전', text: '매트 회전 이동' },
+                        { id: 'c1_Hopper', label: '호핑볼', text: '호핑볼' }, { id: 'c1_Scooter', label: '스쿠터보드', text: '스쿠터보드' },
+                        { id: 'c1_Jump', label: '매트 점프', text: '매트 점프 착지' },
+                    ]},
+                    { id: 'C2', items: [
+                        { id: 'c2_ladder', label: '사다리', text: '사다리' }, { id: 'c2_igym_top', label: '아이짐 원통', text: '아이짐 원통' },
+                        { id: 'c2_igym_bar', label: '아이짐 뜀', text: '아이짐 뜀' }, { id: 'c2_Incline-crawl', label: '경사면 기어오르기', text: '경사면 기어오르기' },
+                        { id: 'c2_wall-climb', label: '암벽', text: '암벽' }, { id: 'c2_Wheelbarrow', label: '손수레 자세', text: '손수레 자세' },
+                        { id: 'c2_Bear-walk', label: '곰걸음(네발기기)', text: '곰걸음' }, { id: 'c2_Prone', label: '엎드린 자세', text: '엎드린 자세 유지' },
+                        { id: 'c2_Climbing', label: '미끄럼틀 오르기', text: '미끄럼틀 오르기' }, { id: 'c2_Gymball', label: '짐볼', text: '짐볼' },
+                    ]},
+                    { id: 'C3', items: [
+                        { id: 'c3_Unipedal', label: '한발 서기', text: '한발 서기' }, { id: 'c3_Dynamic-balance', label: '이동 후 한발 서기', text: '이동 후 한발 서기' },
+                        { id: 'c3_Beam', label: '평균대', text: '평균대' }, { id: 'c3_Stepping-stones', label: '징검다리', text: '징검다리' },
+                        { id: 'c3_Balance-board', label: '균형판', text: '균형판' }, { id: 'c3_Pedalo', label: '페달로', text: '페달로' },
+                        { id: 'c3_Half-roll', label: '반원매트', text: '반원매트' },
+                    ]},
+                    { id: 'C4', items: [
+                        { id: 'c4_Bouncing', label: '공 튀기며 잡기', text: '공 튀기며 잡기' }, { id: 'c4_Bowling', label: '볼링핀', text: '볼링핀' },
+                        { id: 'c4_Spot-marker', label: '원마커', text: '원마커' }, { id: 'c4_Elastic', label: '고무줄', text: '고무줄' },
+                        { id: 'c4_Rope', label: '로프', text: '로프' }, { id: 'c4_Hoop', label: '훌라후프', text: '훌라후프' },
+                        { id: 'c4_Cross-crawl', label: '교차 기어가기', text: '교차 패턴 기어가기' }, { id: 'c4_Rhythm', label: '리듬 동작', text: '리듬 따라 동작' },
+                        { id: 'c4_Cooperation', label: '양손 막대', text: '양손 막대 이동' },
+                    ]},
+                    { id: 'C5', items: [
+                        { id: 'act_hang_swing', label: '매달려 그네 타기', text: '매달려 그네 타기' }, { id: 'act_pull_climb', label: '수직 기구 오르기', text: '수직 기구 오르기' },
+                        { id: 'act_rope_pull', label: '로프 당기기/매달리기', text: '로프 당기기/매달리기' }, { id: 'act_posture_swing', label: '자세 잡고 흔들기', text: '자세 잡고 흔들기' },
+                        { id: 'act_prone_ext', label: '엎드려 자세 버티기', text: '엎드려 자세 버티기' }, { id: 'act_slide_var', label: '경사면 내려오기', text: '경사면 내려오기' },
+                        { id: 'act_heavy_walk', label: '손 짚고 네발 걷기', text: '손 짚고 네발 걷기' }, { id: 'act_incline_crawl', label: '경사면 기어 오르기', text: '경사면 기어 오르기' },
+                        { id: 'act_scooter_propel', label: '엎드려 보드 타기', text: '엎드려 보드 타기' }, { id: 'act_narrow_walk', label: '좁은 길 걷기', text: '좁은 길 걷기' },
+                        { id: 'act_dynamic_bal', label: '흔들리는 판 서기', text: '흔들리는 판 위에서 서기' }, { id: 'act_one_leg', label: '한 발로 중심 잡기', text: '한 발로 중심 잡기' },
+                        { id: 'act_jump_obs', label: '깜짝 장애물 넘기', text: '깜짝 튀어 장애물 넘기' }, { id: 'act_jump_rhythm', label: '리듬 맞춰 점프하기', text: '리듬 맞춰 점프하기' },
+                        { id: 'act_rope_jump', label: '줄/후프 뛰어 넘기', text: '줄/후프 뛰어 넘기' }, { id: 'act_count_jump', label: '숫자 세며 깜짝', text: '숫자 세며 깜짝 뛰어오르기' },
+                        { id: 'act_visual_hunt', label: '이동하며 물체 찾기', text: '이동하며 물체 찾기' }, { id: 'act_fetch_relay', label: '물건 가져오기(왕복)', text: '물건 가져오기(왕복)' },
+                        { id: 'act_path_posture', label: '길 따라 자세 바꾸기', text: '길 따라 자세 바꿔 가기' }, { id: 'act_target_throw', label: '목표물 맞추기', text: '목표물 맞추기/굴리기' },
+                        { id: 'act_eye_hand', label: '공 튀기고 잡기', text: '공 튀기고 잡기' }, { id: 'act_body_roll', label: '신체 회전하기', text: '신체 회전하기' },
+                        { id: 'act_bilateral', label: '양손 협응 동작하기', text: '양손 협응 동작하기' }
+                    ]}
+                ]
+            },
+            D: {
+                sections: [
+                    { id: 'D1', items: [
+                        { id: 'e1_seek_high', label: '감각 추구 (고도)', text: '특정 감각에 대한 고도한 추구 반응 관찰' },
+                        { id: 'e1_avoid_high', label: '감각 회피 (심함)', text: '특정 감각 자극에 대해 심한 회피 반응 보임' },
+                        { id: 'e1_seek_mod', label: '감각 조절 적절', text: '제공된 감각 입력에 대해 적절한 조절 반응 유지' },
+                    ]},
+                    { id: 'D2', items: [
+                        { id: 'e2_imit_good', label: '동작 모방 (상)', text: '치료사의 동작을 정확하고 즉각적으로 모방함' },
+                        { id: 'e2_imit_poor', label: '동작 모방 (하)', text: '동작 모방 시 시각적 단서와 신체적 촉진이 필요했음' },
+                        { id: 'e2_posture_indep', label: '자세 유지 (독립)', text: '도구 위에서 흔들림을 견디며 독립적으로 자세 유지' },
+                        { id: 'e2_posture_assist', label: '자세 유지 (보조)', text: '자세 조절 능력이 부족하여 신체적 지지 제공함' },
+                        { id: 'e6_perf_high', label: '수행도 80%↑', text: '과제 수행 완성도가 80% 이상으로 높음' },
+                        { id: 'e6_perf_mid', label: '수행도 50-79%', text: '현재 난이도에서 50~79% 수준의 수행력 보임' },
+                        { id: 'e6_perf_low', label: '수행도 50%↓', text: '과제 수행도가 50% 미만으로 나타남' },
+                        { id: 'e6_perf_improve', label: '점진적 향상', text: '초반 어려움 있었으나 중반 이후 적절한 수행 보임' },
+                    ]},
+                    { id: 'D3', items: [
+                        { id: 'e3_att_good', label: '과제 집중 (지속)', text: '제시된 과제에 대해 끝까지 주의를 지속하며 완수함' },
+                        { id: 'e3_att_dist', label: '과제 집중 (산만)', text: '주의가 쉽게 산만해져 잦은 환기와 환경 조절 필요' },
+                        { id: 'e3_trans_good', label: '전환 반응 (원활)', text: '활동 전환이 원활하게 이루어짐' },
+                        { id: 'e3_trans_resist', label: '전환 반응 (저항)', text: '활동 전환 시 저항을 보임' },
+                    ]},
+                    { id: 'D4', items: [
+                        { id: 'e4_emo_joy', label: '활동 정서 (즐거움)', text: '긍정적인 정서를 표출하며 즐겁게 참여함' },
+                        { id: 'e4_emo_anx', label: '활동 정서 (불안)', text: '익숙하지 않은 활동에 불안감을 표현함' },
+                        { id: 'e4_fail_giveup', label: '실패 대처 (포기)', text: '과제 실패 시 쉽게 포기하는 모습 보임' },
+                    ]},
+                    { id: 'D5', items: [
+                        { id: 'e5_eye_freq', label: '시선 맞춤 (빈번)', text: '치료사와 빈번하게 시선을 맞추며 상호작용함' },
+                        { id: 'e5_eye_avoid', label: '시선 맞춤 (회피)', text: '상호작용 시 시선을 회피함' },
+                        { id: 'e5_interact_spon', label: '상호작용 (자발적)', text: '자발적으로 상호작용을 시도함' },
+                        { id: 'e5_order_imm', label: '지시 따르기 (즉각)', text: '지시를 즉각적으로 수행함' },
+                    ]}
+                ]
+            },
+            E: {
+                sections: [
+                    { id: 'E1', items: [
+                        { id: 'f1_input_inc', label: '입력강도 (증가)', text: '각성 수준을 높이기 위해 입력 강도 상향' },
+                        { id: 'f1_input_dec', label: '입력강도 (감소)', text: '과부하 방지를 위해 입력 강도 하향' },
+                        { id: 'f1_speed_fast', label: '활동속도 (빠르게)', text: '역동적 움직임을 위해 속도 빠르게 진행' },
+                        { id: 'f1_speed_slow', label: '활동속도 (천천히)', text: '정확한 계획을 위해 속도 천천히 조절' },
+                        { id: 'f1_rest_freq', label: '휴식제공 (빈번)', text: '빈번한 휴식 제공' },
+                    ]},
+                    { id: 'E2', items: [
+                        { id: 'f2_phys_guide', label: '신체 가이드 제공', text: '신체적 가이드 제공' },
+                        { id: 'f2_verbal_enc', label: '언어적 격려', text: '언어적 피드백과 격려 제공' },
+                        { id: 'f2_visual_sch', label: '시각 스케줄', text: '시각적 스케줄 제시' },
+                        { id: 'f2_timer', label: '타이머 활용', text: '시각 타이머 활용' },
+                    ]},
+                    { id: 'E3', items: [
+                        { id: 'f3_reward_imm', label: '긍정강화 (즉각)', text: '즉각적인 보상 제공' },
+                        { id: 'f3_reward_delay', label: '긍정강화 (지연)', text: '지연된 강화 제공' },
+                        { id: 'f3_alt_beh', label: '대안 행동 제시', text: '대안 행동 모델링' },
+                        { id: 'f3_sen_break', label: '감각 조절 휴식', text: '감각 조절 휴식 제공' },
+                    ]},
+                    { id: 'E4', items: [
+                        { id: 'f4_proprio', label: '안정화 입력', text: '고유수용성 입력 제공' },
+                        { id: 'f4_choice', label: '선택 제공', text: '선택 기회 제공' },
+                        { id: 'f4_step', label: '단계적 제시', text: '과제 단계적 제시' },
+                        { id: 'f4_repeat', label: '반복 연습', text: '반복 연습 유도' },
+                    ]}
+                ]
+            }
+        };
+
+        let state = {
+            basicInfo: { name: '', dob: '', date: new Date().toISOString().split('T')[0] },
+            checkedItems: {},
+            history: []
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initDiagnosisDropdown();
+            renderGrid();
+            loadHistory();
+            loadDraft();
+            generateReport();
+        });
+
+        function renderGrid() {
+            const containerB = document.getElementById('container-B');
+            CATEGORIES.B.items.forEach(item => containerB.appendChild(createCheckbox(item)));
+            ['C', 'D', 'E'].forEach(cat => {
+                CATEGORIES[cat].sections.forEach(sec => {
+                    renderItemsToContainer(cat, sec.id, `container-${sec.id}`);
+                });
+            });
+        }
+
+        function renderItemsToContainer(catKey, secId, containerId) {
+            const section = CATEGORIES[catKey].sections.find(s => s.id === secId);
+            const container = document.getElementById(containerId);
+            if (section && container) {
+                section.items.forEach(item => container.appendChild(createCheckbox(item)));
+            }
+        }
+
+        function createCheckbox(item) {
+            const label = document.createElement('label');
+            label.className = 'checkbox-wrapper';
+            label.id = `label-${item.id}`;
+            label.innerHTML = `<input type="checkbox" id="chk-${item.id}" onchange="toggleCheck('${item.id}')"><span>${item.label}</span>`;
+            return label;
+        }
+
+        function toggleCheck(id) {
+            const chk = document.getElementById(`chk-${id}`);
+            const lbl = document.getElementById(`label-${id}`);
+            state.checkedItems[id] = chk.checked;
+            chk.checked ? lbl.classList.add('checked') : lbl.classList.remove('checked');
+            saveDraft();
+            generateReport();
+        }
+
+        function handleNameInput() {
+            const name = document.getElementById('input-name').value.trim();
+            state.basicInfo.name = name;
+            const found = state.history.find(h => h.name === name && h.dob);
+            if (found && !document.getElementById('input-dob').value) {
+                document.getElementById('input-dob').value = found.dob;
+                if(found.diagnosis) {
+                    const sel = document.getElementById('select-diagnosis');
+                    sel.value = [...sel.options].some(o => o.value === found.diagnosis) ? found.diagnosis : 'manual';
+                    if(sel.value === 'manual') {
+                        document.getElementById('input-diagnosis-manual').classList.remove('hidden');
+                        document.getElementById('input-diagnosis-manual').value = found.diagnosis;
+                    }
+                    handleDiagnosisSelect();
+                }
+            }
+            updateBasicInfo();
+        }
+
+        function updateBasicInfo() {
+            state.basicInfo.name = document.getElementById('input-name').value;
+            state.basicInfo.dob = document.getElementById('input-dob').value;
+            state.basicInfo.date = document.getElementById('input-date').value;
+            
+            if(state.basicInfo.dob && state.basicInfo.date) {
+                const birth = new Date(state.basicInfo.dob);
+                const target = new Date(state.basicInfo.date);
+                let m = (target.getFullYear() - birth.getFullYear()) * 12 + (target.getMonth() - birth.getMonth());
+                if (target.getDate() < birth.getDate()) m--;
+                document.getElementById('display-age').innerText = m < 0 ? '미래' : `${Math.floor(m/12)}세 ${m%12}개월`;
+                state.basicInfo.ageString = document.getElementById('display-age').innerText;
+            }
+
+            if(state.basicInfo.name && state.basicInfo.date) {
+                const d = new Date(state.basicInfo.date);
+                const sessions = state.history.filter(h => {
+                    const hd = new Date(h.date);
+                    return h.name === state.basicInfo.name && hd.getMonth() === d.getMonth() && hd.getFullYear() === d.getFullYear();
+                });
+                const badge = document.getElementById('session-count-badge');
+                badge.innerText = `${d.getMonth()+1}월 ${sessions.length + 1}회차`;
+                badge.classList.remove('hidden');
+            }
+            
+            saveDraft();
+            generateReport();
+        }
+
+        function resetDob() {
+            document.getElementById('input-dob').value = "";
+            state.basicInfo.dob = "";
+            document.getElementById('display-age').innerText = "-";
+            updateBasicInfo();
+        }
+
+        function initDiagnosisDropdown() {
+            const sel = document.getElementById('select-diagnosis');
+            DIAGNOSIS_LIST.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.value; opt.text = d.label;
+                sel.appendChild(opt);
+            });
+        }
+
+        function handleDiagnosisSelect() {
+            const val = document.getElementById('select-diagnosis').value;
+            const tip = document.getElementById('diagnosis-tip');
+            const manual = document.getElementById('input-diagnosis-manual');
+            
+            if(val === "") {
+                tip.classList.add('hidden');
+                manual.classList.add('hidden');
+                state.basicInfo.diagnosis = "";
+            } else {
+                const data = DIAGNOSIS_LIST.find(d => d.value === val);
+                if(data) {
+                    tip.textContent = "Tip: " + data.keywords;
+                    tip.classList.remove('hidden');
+                    manual.classList.add('hidden');
+                    state.basicInfo.diagnosis = data.value;
+                }
+            }
+            updateBasicInfo();
+        }
+
+        function generateReport() {
+            const goals = CATEGORIES.B.items.filter(i => state.checkedItems[i.id]).map(i => i.label);
+            const tools = [];
+            ['C1','C2','C3','C4'].forEach(id => {
+                const sec = CATEGORIES.C.sections.find(s => s.id === id);
+                tools.push(...sec.items.filter(i => state.checkedItems[i.id]).map(i => i.label));
+            });
+            const activities = CATEGORIES.C.sections.find(s => s.id === 'C5').items.filter(i => state.checkedItems[i.id]).map(i => i.text);
+            const responses = [];
+            CATEGORIES.D.sections.forEach(s => responses.push(...s.items.filter(i => state.checkedItems[i.id]).map(i => i.text)));
+            const interventions = [];
+            CATEGORIES.E.sections.forEach(s => interventions.push(...s.items.filter(i => state.checkedItems[i.id]).map(i => i.text)));
+
+            const condition = document.getElementById('input-condition').value;
+            const memo = document.getElementById('input-memo').value;
+
+            let t = `[치료 일지]\n아동명: ${state.basicInfo.name} (${state.basicInfo.ageString || '-'}) | 날짜: ${state.basicInfo.date}\n`;
+            if(document.getElementById('session-count-badge').innerText) t += `회차: ${document.getElementById('session-count-badge').innerText}\n`;
+            t += `진단: ${state.basicInfo.diagnosis || '-'}\n\n`;
+
+            t += `1. 치료 목표\n${goals.length ? goals.join(', ') + '을(를) 목표로 함.' : '(선택 없음)'}\n\n`;
+            
+            t += `2. 활동 내용\n`;
+            if(activities.length) {
+                if(tools.length) t += `${tools.join(', ')} 등을 활용하여, `;
+                t += `다음 활동을 진행함.\n- ${activities.join('\n- ')}\n\n`;
+            } else t += `(선택 없음)\n\n`;
+
+            t += `3. 아동 반응 및 중재\n`;
+            const obs = [];
+            if(condition) obs.push(`컨디션: ${condition}`);
+            obs.push(...responses, ...interventions);
+            if(memo) obs.push(`특이사항: ${memo}`);
+            t += obs.length ? `- ${obs.join('\n- ')}\n\n` : `(특이사항 없음)\n\n`;
+
+            t += `4. 종합 평가\n`;
+            if(responses.some(r => r.includes('과도') || r.includes('회피') || r.includes('산만'))) {
+                t += `감각 조절 및 주의 집중 지원이 필요하였으나, 적절한 중재로 과제를 수행함.`;
+            } else {
+                t += `안정적인 각성 수준을 유지하며 과제에 적극적으로 참여함.`;
+            }
+
+            document.getElementById('report-output').value = t;
+        }
+
+        // ⭐ Netlify Function으로 AI 호출 (API 키 숨김)
+        async function generateGeminiSummary() {
+            const reportText = document.getElementById('report-output').value;
+            
+            if (!reportText.trim() || reportText.length < 50) {
+                alert("분석할 일지 내용이 부족합니다. 체크박스를 선택해주세요.");
+                return;
+            }
+
+            const btn = document.getElementById('btn-ai');
+            const loading = document.getElementById('ai-loading');
+            const output = document.getElementById('ai-output');
+            const selectedMode = document.querySelector('input[name="ai-mode"]:checked').value;
+
+            btn.disabled = true;
+            loading.classList.remove('hidden');
+            output.value = "";
+
+            try {
+                // ⭐ Netlify Function 호출 (/.netlify/functions/gemini)
+                const response = await fetch('/.netlify/functions/gemini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        reportText: reportText,
+                        mode: selectedMode
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '서버 오류가 발생했습니다.');
+                }
+
+                output.value = data.summary;
+
+            } catch (error) {
+                console.error(error);
+                output.value = `[오류 발생] ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                loading.classList.add('hidden');
+            }
+        }
+
+        function saveLog() {
+            if(!state.basicInfo.name) return alert("이름 입력 필요");
+            const entry = {
+                id: Date.now(),
+                date: state.basicInfo.date,
+                name: state.basicInfo.name,
+                dob: state.basicInfo.dob,
+                diagnosis: state.basicInfo.diagnosis,
+                report: document.getElementById('report-output').value,
+                checkedItems: {...state.checkedItems}
+            };
+            state.history.unshift(entry);
+            saveHistoryToLocal();
+            renderHistory();
+            resetApp();
+        }
+
+        function deleteLog(id) {
+            if(confirm("정말로 이 기록을 삭제하시겠습니까?")) {
+                state.history = state.history.filter(h => h.id !== id);
+                saveHistoryToLocal();
+                renderHistory();
+            }
+        }
+
+        function saveHistoryToLocal() {
+            localStorage.setItem('si_log_history_full', JSON.stringify(state.history));
+        }
+
+        function resetApp() {
+            localStorage.removeItem('si_log_draft_full');
+            location.reload();
+        }
+
+        function saveDraft() {
+            localStorage.setItem('si_log_draft_full', JSON.stringify({basicInfo: state.basicInfo, checkedItems: state.checkedItems}));
+        }
+
+        function loadDraft() {
+            const s = localStorage.getItem('si_log_draft_full');
+            if(s) {
+                const d = JSON.parse(s);
+                state.basicInfo = d.basicInfo || state.basicInfo;
+                state.checkedItems = d.checkedItems || {};
+                document.getElementById('input-name').value = state.basicInfo.name;
+                document.getElementById('input-dob').value = state.basicInfo.dob;
+                document.getElementById('input-date').value = state.basicInfo.date;
+                for(const id in state.checkedItems) {
+                    if(state.checkedItems[id]) {
+                        const el = document.getElementById(`chk-${id}`);
+                        if(el) { el.checked = true; document.getElementById(`label-${id}`).classList.add('checked'); }
+                    }
+                }
+                updateBasicInfo();
+            }
+        }
+
+        function loadHistory() {
+            const s = localStorage.getItem('si_log_history_full');
+            if(s) { state.history = JSON.parse(s); }
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const list = document.getElementById('history-list');
+            const empty = document.getElementById('empty-history');
+            list.innerHTML = '';
+            
+            if (state.history.length === 0) {
+                empty.classList.remove('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+
+            state.history.forEach(h => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-4 rounded shadow border border-slate-300 relative group transition hover:shadow-md';
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="font-bold text-lg text-slate-800">${h.name}</span>
+                            <span class="text-sm text-slate-500 ml-2">${h.date}</span>
+                        </div>
+                        <button onclick="deleteLog(${h.id})" class="text-red-400 hover:text-red-600 border border-red-200 hover:bg-red-50 rounded px-2 py-1 text-xs transition">
+                            삭제 🗑️
+                        </button>
+                    </div>
+                    <div class="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed bg-slate-50 p-2 rounded">${h.report}</div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function exportData() {
+            if(!state.history.length) return alert("내보낼 데이터가 없습니다.");
+            let csv = "\uFEFF이름,날짜,내용\n";
+            state.history.forEach(h => {
+                csv += `"${h.name}","${h.date}","${h.report.replace(/"/g, '""')}"\n`;
+            });
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `treatment_logs_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+
+        function switchTab(t) {
+            document.getElementById('tab-write').classList.toggle('hidden', t !== 'write');
+            document.getElementById('tab-history').classList.toggle('hidden', t !== 'history');
+            
+            const btnWrite = document.getElementById('btn-tab-write');
+            const btnHistory = document.getElementById('btn-tab-history');
+            
+            if(t === 'write') {
+                btnWrite.className = "px-3 py-1 rounded bg-blue-600 text-xs font-bold text-white";
+                btnHistory.className = "px-3 py-1 rounded bg-slate-600 text-xs text-slate-200 font-bold hover:bg-slate-500";
+            } else {
+                btnWrite.className = "px-3 py-1 rounded bg-slate-600 text-xs text-slate-200 font-bold hover:bg-slate-500";
+                btnHistory.className = "px-3 py-1 rounded bg-blue-600 text-xs font-bold text-white";
+            }
+        }
+
+        function copyReport() {
+            navigator.clipboard.writeText(document.getElementById('report-output').value);
+            alert("일지 내용이 복사되었습니다.");
+        }
+
+        function sendToGoogleDocs() {
+            copyReport();
+            if(confirm("내용이 복사되었습니다. 구글 문서 새 창을 여시겠습니까?")) window.open('https://docs.google.com/document/create', '_blank');
+        }
+    </script>
+</body>
+</html>
