@@ -1,5 +1,4 @@
 exports.handler = async function(event, context) {
-  // CORS 헤더
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -7,12 +6,10 @@ exports.handler = async function(event, context) {
     'Content-Type': 'application/json'
   };
 
-  // OPTIONS 요청 처리
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
 
-  // POST 요청만 허용
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
@@ -23,15 +20,12 @@ exports.handler = async function(event, context) {
 
   try {
     const { reportText, mode } = JSON.parse(event.body);
-
-    // 환경 변수에서 API 키 가져오기
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
       throw new Error('API 키가 설정되지 않았습니다.');
     }
 
-    // 모드별 설정
     let modelName = 'gemini-1.5-flash';
     let systemRole = '';
     
@@ -43,13 +37,13 @@ exports.handler = async function(event, context) {
       systemRole = "당신은 감각통합 슈퍼바이저입니다. 일지를 심층 분석하여 '활동 계획 및 결과'를 4~5줄로 요약하세요. 아동의 행동 이면에 있는 감각처리 문제를 추론하고, 전문 용어를 사용해 임상적으로 해석하세요. Ayres SI 이론과 발달 단계를 근거로 제시하세요.";
     } else if (mode === 'pro') {
       modelName = 'gemini-1.5-pro';
-      systemRole = "당신은 대학병원 작업치료사입니다. 일지를 읽고 '활동 계획 및 결과'를 4~5줄로 작성하되, 의무기록에 적합한 격식 있고 명확한 문장으로 작성하세요. 관찰된 사실에 근거하여 임상적 판단을 제시하고, 감각통합 및 아동발달 이론을 반영하세요.";
+      systemRole = "당신은 임상경력 20년 소아 감각통합을 했으며 대학병원 작업치료사입니다. 일지를 읽고 '활동 계획 및 결과'를 4~5줄로 작성하되, 의무기록에 적합한 격식 있고 명확한 문장으로 작성하세요. 관찰된 사실에 근거하여 임상적 판단을 제시하고, 감각통합 및 아동발달 이론을 반영하세요.";
     }
 
     const prompt = systemRole + "\n\n[입력된 치료 일지]\n" + reportText + "\n\n위 내용을 바탕으로 '활동 계획 및 결과'를 4~5줄로 요약해 주세요.";
 
-    // Gemini API 호출
-    const apiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent?key=' + apiKey;
+    // ⭐ 수정된 API URL (v1beta → v1)
+    const apiUrl = 'https://generativelanguage.googleapis.com/v1/models/' + modelName + ':generateContent?key=' + apiKey;
     
     const response = await fetch(apiUrl, {
       method: 'POST',
